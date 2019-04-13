@@ -5,6 +5,10 @@ import android.graphics.Color;
 import android.util.AttributeSet;
 import android.support.v7.widget.AppCompatButton;
 import android.view.View;
+import com.facebook.react.bridge.Arguments;
+import com.facebook.react.bridge.ReactContext;
+import com.facebook.react.bridge.WritableMap;
+import com.facebook.react.uimanager.events.RCTEventEmitter;
 
 public class BulbView extends AppCompatButton {
 
@@ -12,8 +16,8 @@ public class BulbView extends AppCompatButton {
 
     public BulbView(Context context) {
         super(context);
-        this.setTextColor(Color.BLUE);
-        this.setOnClickListener(changeStatusListener);
+        setTextColor(Color.BLUE);
+        setOnClickListener(changeStatusListener);
         updateButton();
     }
 
@@ -38,6 +42,14 @@ public class BulbView extends AppCompatButton {
     };
 
     private void updateButton() {
+        WritableMap event = Arguments.createMap();
+        event.putBoolean("isOn", isOn);
+        ReactContext reactContext = (ReactContext)getContext();
+        reactContext.getJSModule(RCTEventEmitter .class).receiveEvent(
+            getId(),
+            "statusChange",
+            event);
+
         if (isOn) {
             setBackgroundColor(Color.YELLOW);
             setText("Switch OFF");
@@ -46,4 +58,5 @@ public class BulbView extends AppCompatButton {
             setText("Switch ON");
         }
     }
+
 }
