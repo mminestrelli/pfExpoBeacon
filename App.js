@@ -6,7 +6,7 @@ render() {
  return (
    <View style={styles.container}>
      <View style={styles.top} />
-     <Bulb style={ styles.bottom } />
+     <Bulb style={ styles.bottom } isOn={true}/>
   </View>
 );
 }
