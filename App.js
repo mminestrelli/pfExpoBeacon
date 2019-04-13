@@ -1,6 +1,9 @@
 import React, {Component} from 'react';
 import {StyleSheet, Text, View, requireNativeComponent} from 'react-native';
+
 const Bulb = requireNativeComponent("Bulb")
+var ToastExample = require('NativeModules').ToastExample;
+
 export default class App extends Component {
 
 constructor(props) {
@@ -10,6 +13,7 @@ constructor(props) {
 }
 _onStatusChange = e => {
   this.setState({ isOn: e.nativeEvent.isOn});
+  ToastExample.show('Status Changed', ToastExample.SHORT);
 }
 
 render() {
