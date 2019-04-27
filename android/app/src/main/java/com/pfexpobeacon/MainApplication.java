@@ -24,7 +24,8 @@ public class MainApplication extends Application implements ReactApplication {
             return Arrays.asList(
                 new MainReactPackage(),
                 new BulbPackage(),
-                new CustomToastPackage()
+                new CustomToastPackage(),
+                new BeaconMonitorPakage()
             );
         }
 

@@ -4,13 +4,12 @@ import com.facebook.react.ReactPackage;
 import com.facebook.react.bridge.NativeModule;
 import com.facebook.react.bridge.ReactApplicationContext;
 import com.facebook.react.uimanager.ViewManager;
-
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import javax.annotation.Nonnull;
 
-public class CustomToastPackage implements ReactPackage {
+public class BeaconMonitorPakage implements ReactPackage {
 
     @Nonnull
     @Override
@@ -24,7 +23,7 @@ public class CustomToastPackage implements ReactPackage {
         ReactApplicationContext reactContext) {
         List<NativeModule> modules = new ArrayList<>();
 
-        modules.add(new ToastManager(reactContext));
+        modules.add(new BeaconMonitorManager(reactContext));
 
         return modules;
     }

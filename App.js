@@ -3,6 +3,7 @@ import {StyleSheet, Text, View, requireNativeComponent} from 'react-native';
 
 const Bulb = requireNativeComponent("Bulb")
 var ToastExample = require('NativeModules').ToastExample;
+var BeaconMonitor = require('NativeModules').BeaconMonitor;
 
 export default class App extends Component {
 
@@ -13,15 +14,20 @@ constructor(props) {
 }
 _onStatusChange = e => {
   this.setState({ isOn: e.nativeEvent.isOn});
-  ToastExample.show('Status Changed', ToastExample.SHORT);
+  if(this.state.isOn){
+    BeaconMonitor.startBeaconMonitoring();  
+  }else {
+    BeaconMonitor.stopBeaconMonitoring();  
+  }
+  
 }
 
 render() {
  return (
    <View style={styles.container}>
      <View style={styles.top} >
-      <Text>This state of Bulb come from Native Code to JavaScript</Text>
-      <Text>{this.state.isOn ? "Bulb is On" : "Bulb is Off"}</Text>
+      <Text>Monitor de Beacons esta: </Text>
+      <Text>{this.state.isOn ? "Encendido" : "Apagado"}</Text>
     </View>
     <Bulb style={ styles.bottom }  isOn={this.state.isOn} onStatusChange={this._onStatusChange} />
   </View>
