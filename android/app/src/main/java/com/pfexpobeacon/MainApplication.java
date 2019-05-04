@@ -3,6 +3,7 @@ package com.pfexpobeacon;
 import android.app.Application;
 
 import com.facebook.react.ReactApplication;
+import com.github.amarcruz.rnlog.RNLogPackage;
 import com.facebook.react.ReactNativeHost;
 import com.facebook.react.ReactPackage;
 import com.facebook.react.shell.MainReactPackage;
@@ -23,6 +24,7 @@ public class MainApplication extends Application implements ReactApplication {
         protected List<ReactPackage> getPackages() {
             return Arrays.asList(
                 new MainReactPackage(),
+            new RNLogPackage(),
                 new BulbPackage(),
                 new CustomToastPackage(),
                 new BeaconMonitorPakage()

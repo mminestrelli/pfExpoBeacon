@@ -47,20 +47,11 @@ public class BeaconMonitorManager extends ReactContextBaseJavaModule implements 
     @ReactMethod
     public void startBeaconMonitoring() {
         Log.d(TAG, "startBeaconMonitoring called");
-        if (beaconManager != null && beaconRegion != null) {
+        if (beaconManager != null && beaconManager.isBound(this) && beaconRegion != null) {
+            Log.d(TAG, "beaconManager and beaconRegion already exists");
             return;
         }
         configureBeaconManager();
-        if (beaconManager.isBound(this)) {
-            beaconManager.setBackgroundMode(false);
-        }
-
-        //3. Bind the manager to a class tha implements the Android Beacon library beacon consumer interface.
-        //In order to do that we can implement our MainActivity to implement the beacon consumer interface.
-        beaconManager.bind(this);
-
-        beaconManager.setBackgroundMode(false);
-        beaconManager.setForegroundBetweenScanPeriod(DEFAULT_FOREGROUND_SCAN_PERIOD);
 
         try {
             //Region(UniqueId, UUID, major, minor)
@@ -92,6 +83,11 @@ public class BeaconMonitorManager extends ReactContextBaseJavaModule implements 
     }
 
     private void configureBeaconManager() {
+        if(beaconManager != null && beaconManager.isBound(this)){
+            Log.d(TAG, "beaconManager already exists");
+            return;
+        }
+
         //1. Fetch the beacon manager singleton for the app.
         beaconManager = BeaconManager.getInstanceForApplication(getApplicationContext());
         //2. Set the beacon manager a beacon Pazza with a set layout.
@@ -102,6 +98,13 @@ public class BeaconMonitorManager extends ReactContextBaseJavaModule implements 
         //beaconManager.getBeaconParsers().add(new BeaconParser(BeaconParser.URI_BEACON_LAYOUT));
         beaconManager.getBeaconParsers().add(new BeaconParser().
             setBeaconLayout("m:0-3=4c000215,i:4-19,i:20-21,i:22-23,p:24-24"));
+
+        //3. Bind the manager to a class tha implements the Android Beacon library beacon consumer interface.
+        //In order to do that we can implement our MainActivity to implement the beacon consumer interface.
+        beaconManager.bind(this);
+
+        beaconManager.setBackgroundMode(false);
+        beaconManager.setForegroundBetweenScanPeriod(DEFAULT_FOREGROUND_SCAN_PERIOD);
     }
 
     @Override
@@ -155,6 +158,7 @@ public class BeaconMonitorManager extends ReactContextBaseJavaModule implements 
     public Context getApplicationContext() {
         return getReactApplicationContext();
     }
+
 
     @Override
     public void unbindService(final ServiceConnection serviceConnection) {
