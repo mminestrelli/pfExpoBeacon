@@ -83,7 +83,7 @@ public class BeaconMonitorManager extends ReactContextBaseJavaModule implements 
     }
 
     private void configureBeaconManager() {
-        if(beaconManager != null && beaconManager.isBound(this)){
+        if (beaconManager != null && beaconManager.isBound(this)) {
             Log.d(TAG, "beaconManager already exists");
             return;
         }
@@ -147,9 +147,7 @@ public class BeaconMonitorManager extends ReactContextBaseJavaModule implements 
     }
 
     private void showBeaconInfo(final Region region, final Beacon beacon) {
-        final String message = "Ranging region " + region.getUniqueId() +
-            "Beacon detected UUID/major/minor: " + beacon.getId1() +
-            "/" + beacon.getId2() + "/" + beacon.getId3();
+        final String message = "Mac addr: " + beacon.getBluetoothAddress() + "Distance: " + beacon.getDistance();
 
         Toast.makeText(getReactApplicationContext(), message, Toast.LENGTH_SHORT).show();
     }
@@ -158,7 +156,6 @@ public class BeaconMonitorManager extends ReactContextBaseJavaModule implements 
     public Context getApplicationContext() {
         return getReactApplicationContext();
     }
-
 
     @Override
     public void unbindService(final ServiceConnection serviceConnection) {
