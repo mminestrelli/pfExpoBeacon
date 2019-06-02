@@ -1,23 +1,28 @@
 import React, {Component} from 'react';
-import {StyleSheet, Text, View, requireNativeComponent} from 'react-native';
+import {StyleSheet, Text, View, Button, requireNativeComponent} from 'react-native';
 
-const Bulb = requireNativeComponent("Bulb")
-var ToastExample = require('NativeModules').ToastExample;
 var BeaconMonitor = require('NativeModules').BeaconMonitor;
+const isOnText = "Switch OFF";
+const isOffText = "Switch ON";
 
 export default class App extends Component {
 
 constructor(props) {
   super(props);
   this._onStatusChange = this._onStatusChange.bind(this);
-  this.state = { isOn: false };
+  this.state = { isOn: false};
+  this.state = { buttonText: isOffText};
 }
+
 _onStatusChange = e => {
-  this.setState({ isOn: e.nativeEvent.isOn});
   if(this.state.isOn){
-    BeaconMonitor.startBeaconMonitoring();  
-  }else {
     BeaconMonitor.stopBeaconMonitoring();  
+    this.setState({ buttonText: isOffText});
+    this.setState({ isOn: false});
+  }else {
+    BeaconMonitor.startBeaconMonitoring();  
+    this.setState({ buttonText: isOnText});
+    this.setState({ isOn: true});
   }
   
 }
@@ -29,7 +34,7 @@ render() {
       <Text>Monitor de Beacons esta: </Text>
       <Text>{this.state.isOn ? "Encendido" : "Apagado"}</Text>
     </View>
-    <Bulb style={ styles.bottom }  isOn={this.state.isOn} onStatusChange={this._onStatusChange} />
+    <Button style={ styles.bottom }  title={this.state.buttonText} onPress={this._onStatusChange} />
   </View>
 );
 }

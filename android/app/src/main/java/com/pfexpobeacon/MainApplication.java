@@ -24,9 +24,7 @@ public class MainApplication extends Application implements ReactApplication {
         protected List<ReactPackage> getPackages() {
             return Arrays.asList(
                 new MainReactPackage(),
-            new RNLogPackage(),
-                new BulbPackage(),
-                new CustomToastPackage(),
+                new RNLogPackage(),
                 new BeaconMonitorPakage()
             );
         }
