@@ -16,10 +16,12 @@ constructor(props) {
 
 _onStatusChange = e => {
   if(this.state.isOn){
+    console.log("stop");
     BeaconMonitor.stopBeaconMonitoring();  
     this.setState({ buttonText: isOffText});
     this.setState({ isOn: false});
   }else {
+    console.log("start");
     BeaconMonitor.startBeaconMonitoring();  
     this.setState({ buttonText: isOnText});
     this.setState({ isOn: true});

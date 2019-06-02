@@ -22,7 +22,7 @@ import static org.altbeacon.beacon.BeaconManager.DEFAULT_FOREGROUND_SCAN_PERIOD;
 
 public class BeaconMonitorManager extends ReactContextBaseJavaModule implements BeaconConsumer {
 
-    private static final String TAG = "Altbeacon";
+    private static final String TAG = "ReactNativeJS - Android";
     private BeaconManager beaconManager = null;
     private Region beaconRegion = null;
 
