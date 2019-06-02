@@ -23,8 +23,6 @@ public class BeaconMonitorManager extends ReactContextBaseJavaModule implements 
 
     private static final String TAG = "Altbeacon";
     private BeaconManager beaconManager = null;
-    private boolean entryMessageRaised = false;
-    private boolean exitMessageRaised = false;
     private Region beaconRegion = null;
 
     public BeaconMonitorManager(@Nonnull final ReactApplicationContext reactContext) {
@@ -58,7 +56,7 @@ public class BeaconMonitorManager extends ReactContextBaseJavaModule implements 
             beaconRegion =
                 new Region("MyBeacons", null, null, null);
 
-            beaconManager.startMonitoringBeaconsInRegion(beaconRegion);
+            //beaconManager.startMonitoringBeaconsInRegion(beaconRegion);
             beaconManager.startRangingBeaconsInRegion(beaconRegion);
         } catch (Exception e) {
             e.printStackTrace();
@@ -72,13 +70,13 @@ public class BeaconMonitorManager extends ReactContextBaseJavaModule implements 
             return;
         }
         try {
-            beaconManager.stopMonitoringBeaconsInRegion(beaconRegion);
+            //beaconManager.stopMonitoringBeaconsInRegion(beaconRegion);
             beaconManager.stopRangingBeaconsInRegion(beaconRegion);
         } catch (Exception e) {
             e.printStackTrace();
         }
         beaconManager.removeAllRangeNotifiers();
-        beaconManager.removeAllMonitorNotifiers();
+        //beaconManager.removeAllMonitorNotifiers();
         beaconManager.unbind(this);
     }
 
