@@ -1,5 +1,5 @@
 import React, {Component} from 'react';
-import {StyleSheet, Text, View, Button, requireNativeComponent} from 'react-native';
+import {StyleSheet, Text, View, Switch, requireNativeComponent} from 'react-native';
 
 var BeaconMonitor = require('NativeModules').BeaconMonitor;
 const isOnText = "Switch OFF";
@@ -33,8 +33,8 @@ render() {
      <View style={styles.top} >
       <Text>Monitor de Beacons esta: </Text>
       <Text>{this.state.isOn ? "Encendido" : "Apagado"}</Text>
+      <Switch value={this.state.isOn} onValueChange={this._onStatusChange} />
     </View>
-    <Button style={ styles.bottom }  title={this.state.buttonText} onPress={this._onStatusChange} />
   </View>
 );
 }
