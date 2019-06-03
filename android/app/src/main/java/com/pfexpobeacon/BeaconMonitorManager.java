@@ -67,7 +67,7 @@ public class BeaconMonitorManager extends ReactContextBaseJavaModule implements 
             beaconRegion =
                 new Region("MyBeacons", null, null, null);
 
-            //beaconManager.startMonitoringBeaconsInRegion(beaconRegion);
+            beaconManager.startMonitoringBeaconsInRegion(beaconRegion);
             beaconManager.startRangingBeaconsInRegion(beaconRegion);
             this.promise = promise;
         } catch (Exception e) {
@@ -92,7 +92,7 @@ public class BeaconMonitorManager extends ReactContextBaseJavaModule implements 
             promise.reject(BEACON_MANAGER_DID_NOT_STOP_ERROR, e);
         }
         beaconManager.removeAllRangeNotifiers();
-        //beaconManager.removeAllMonitorNotifiers();
+        beaconManager.removeAllMonitorNotifiers();
         beaconManager.unbind(this);
     }
 
@@ -152,6 +152,7 @@ public class BeaconMonitorManager extends ReactContextBaseJavaModule implements 
                         Log.d(TAG, "Beacon " + i + " found");
                         i++;
                         //Return react native beacon Info
+                        //fixme promise.resolve() can be called just once. Array must be delivered.
                         resolvePromise(beacon);
                     }
                 } else {
