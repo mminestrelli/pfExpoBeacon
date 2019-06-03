@@ -17,16 +17,34 @@ constructor(props) {
 _onStatusChange = e => {
   if(this.state.isOn){
     console.log("stop");
-    BeaconMonitor.stopBeaconMonitoring();  
+    this.stopBeaconMonitoring();  
     this.setState({ buttonText: isOffText});
     this.setState({ isOn: false});
   }else {
     console.log("start");
-    BeaconMonitor.startBeaconMonitoring();  
+    this.startBeaconMonitoring();
     this.setState({ buttonText: isOnText});
     this.setState({ isOn: true});
   }
   
+}
+
+async startBeaconMonitoring() {
+  try {
+    var {macAddress, distance} = await BeaconMonitor.startBeaconMonitoring();
+    console.log("Mac Address: " + macAddress + " - Distance: " + distance);
+  } catch (e) {
+    console.error(e);
+  }
+}
+
+async stopBeaconMonitoring() {
+  try {
+    var {macAddress, distance} = await BeaconMonitor.stopBeaconMonitoring();
+    console.log("Mac Address: " + macAddress + " - Distance: " + distance);
+  } catch (e) {
+    console.error(e);
+  }
 }
 
 render() {

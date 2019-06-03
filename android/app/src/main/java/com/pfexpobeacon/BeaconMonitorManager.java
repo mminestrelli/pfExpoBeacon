@@ -3,11 +3,14 @@ package com.pfexpobeacon;
 import android.content.Context;
 import android.content.Intent;
 import android.content.ServiceConnection;
+import android.support.annotation.NonNull;
 import android.util.Log;
-import android.widget.Toast;
+import com.facebook.react.bridge.Arguments;
+import com.facebook.react.bridge.Promise;
 import com.facebook.react.bridge.ReactApplicationContext;
 import com.facebook.react.bridge.ReactContextBaseJavaModule;
 import com.facebook.react.bridge.ReactMethod;
+import com.facebook.react.bridge.WritableMap;
 import java.util.Collection;
 import javax.annotation.Nonnull;
 import org.altbeacon.beacon.Beacon;
@@ -22,9 +25,16 @@ import static org.altbeacon.beacon.BeaconManager.DEFAULT_FOREGROUND_SCAN_PERIOD;
 
 public class BeaconMonitorManager extends ReactContextBaseJavaModule implements BeaconConsumer {
 
+    public static final String PROMISE_MAC_ADDRESS = "macAddress";
+    public static final String PROMISE_DISTANCE = "distance";
+
     private static final String TAG = "ReactNativeJS - Android";
+    public static final String BEACON_MANAGER_DID_NOT_START_ERROR = "BEACON_MANAGER_DID_NOT_START_ERROR";
+    public static final String BEACON_MANAGER_DID_NOT_STOP_ERROR = "BEACON_MANAGER_DID_NOT_STOP_ERROR";
+
     private BeaconManager beaconManager = null;
     private Region beaconRegion = null;
+    private Promise promise;
 
     public BeaconMonitorManager(@Nonnull final ReactApplicationContext reactContext) {
         super(reactContext);
@@ -44,7 +54,7 @@ public class BeaconMonitorManager extends ReactContextBaseJavaModule implements 
      * Then you supply the beacon identifiers so
      */
     @ReactMethod
-    public void startBeaconMonitoring() {
+    public void startBeaconMonitoring(@NonNull final Promise promise) {
         Log.d(TAG, "startBeaconMonitoring called");
         if (beaconManager != null && beaconManager.isBound(this) && beaconRegion != null) {
             Log.d(TAG, "beaconManager and beaconRegion already exists");
@@ -59,13 +69,16 @@ public class BeaconMonitorManager extends ReactContextBaseJavaModule implements 
 
             //beaconManager.startMonitoringBeaconsInRegion(beaconRegion);
             beaconManager.startRangingBeaconsInRegion(beaconRegion);
+            this.promise = promise;
         } catch (Exception e) {
+            //Tell react native about the exception
+            promise.reject(BEACON_MANAGER_DID_NOT_START_ERROR, e);
             e.printStackTrace();
         }
     }
 
     @ReactMethod
-    public void stopBeaconMonitoring() {
+    public void stopBeaconMonitoring(@NonNull final Promise promise) {
         Log.d(TAG, "stopBeaconMonitoring called");
         if (beaconManager == null || beaconRegion == null) {
             return;
@@ -75,6 +88,8 @@ public class BeaconMonitorManager extends ReactContextBaseJavaModule implements 
             beaconManager.stopRangingBeaconsInRegion(beaconRegion);
         } catch (Exception e) {
             e.printStackTrace();
+            //Tell react native about the exception
+            promise.reject(BEACON_MANAGER_DID_NOT_STOP_ERROR, e);
         }
         beaconManager.removeAllRangeNotifiers();
         //beaconManager.removeAllMonitorNotifiers();
@@ -136,13 +151,25 @@ public class BeaconMonitorManager extends ReactContextBaseJavaModule implements 
                     for (Beacon beacon : beacons) {
                         Log.d(TAG, "Beacon " + i + " found");
                         i++;
-                        showBeaconInfo(region, beacon);
+                        //Return react native beacon Info
+                        resolvePromise(beacon);
                     }
                 } else {
                     Log.d(TAG, "No beacons found.");
                 }
             }
         });
+    }
+
+    private void resolvePromise(@NonNull final Beacon beacon) {
+        if (promise != null) {
+            WritableMap map = Arguments.createMap();
+
+            map.putString(PROMISE_MAC_ADDRESS, beacon.getBluetoothAddress());
+            map.putDouble(PROMISE_DISTANCE, beacon.getDistance());
+
+            promise.resolve(map);
+        }
     }
 
     private void addMonitorNotifier() {
@@ -162,12 +189,6 @@ public class BeaconMonitorManager extends ReactContextBaseJavaModule implements 
                 /* Not implemented */
             }
         });
-    }
-
-    private void showBeaconInfo(final Region region, final Beacon beacon) {
-        final String message = "Mac addr: " + beacon.getBluetoothAddress() + "Distance: " + beacon.getDistance();
-
-        Toast.makeText(getReactApplicationContext(), message, Toast.LENGTH_SHORT).show();
     }
 
     @Override
