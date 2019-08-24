@@ -3,7 +3,7 @@ package com.pfexpobeacon;
 import android.content.Context;
 import android.content.Intent;
 import android.content.ServiceConnection;
-import android.support.annotation.NonNull;
+import androidx.annotation.NonNull;
 import android.util.Log;
 import com.facebook.react.bridge.Arguments;
 import com.facebook.react.bridge.Promise;
