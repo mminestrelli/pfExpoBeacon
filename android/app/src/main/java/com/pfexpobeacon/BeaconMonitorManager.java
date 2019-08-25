@@ -6,17 +6,17 @@ import android.content.Intent;
 import android.content.ServiceConnection;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 
 import android.os.Build;
 import android.util.Log;
-import android.widget.Toast;
 
 import com.facebook.react.bridge.Arguments;
-import com.facebook.react.bridge.Promise;
 import com.facebook.react.bridge.ReactApplicationContext;
 import com.facebook.react.bridge.ReactContextBaseJavaModule;
 import com.facebook.react.bridge.ReactMethod;
 import com.facebook.react.bridge.WritableMap;
+import com.facebook.react.modules.core.DeviceEventManagerModule;
 
 import java.util.Collection;
 
@@ -26,7 +26,6 @@ import org.altbeacon.beacon.Beacon;
 import org.altbeacon.beacon.BeaconConsumer;
 import org.altbeacon.beacon.BeaconManager;
 import org.altbeacon.beacon.BeaconParser;
-import org.altbeacon.beacon.MonitorNotifier;
 import org.altbeacon.beacon.RangeNotifier;
 import org.altbeacon.beacon.Region;
 
@@ -38,12 +37,9 @@ public class BeaconMonitorManager extends ReactContextBaseJavaModule implements 
     public static final String PROMISE_DISTANCE = "distance";
 
     private static final String TAG = "ReactNativeJS - Android";
-    public static final String BEACON_MANAGER_DID_NOT_START_ERROR = "BEACON_MANAGER_DID_NOT_START_ERROR";
-    public static final String BEACON_MANAGER_DID_NOT_STOP_ERROR = "BEACON_MANAGER_DID_NOT_STOP_ERROR";
 
     private BeaconManager beaconManager = null;
     private Region beaconRegion = null;
-    private Promise promise;
     private ReactApplicationContext reactContext;
     private Context applicationContext;
 
@@ -59,21 +55,20 @@ public class BeaconMonitorManager extends ReactContextBaseJavaModule implements 
         return "BeaconMonitor";
     }
 
-    private void requestPermissions() {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            getCurrentActivity().requestPermissions(new String[]{Manifest.permission.ACCESS_COARSE_LOCATION,
-                            Manifest.permission.ACCESS_FINE_LOCATION}, 1234);
-        }
+    @Override
+    public Context getApplicationContext() {
+        return applicationContext;
     }
 
-    private void configureBeaconManager() {
-        //1. Fetch the beacon manager singleton for the app.
-        beaconManager = BeaconManager.getInstanceForApplication(applicationContext);
-        //2. Set the beacon manager a beacon Pazza with a set layout.
-        beaconManager.getBeaconParsers().add(new BeaconParser().
-                setBeaconLayout("m:0-3=4c000215,i:4-19,i:20-21,i:22-23,p:24-24"));
+    @Override
+    public void unbindService(ServiceConnection serviceConnection) {
+        applicationContext.unbindService(serviceConnection);
     }
 
+    @Override
+    public boolean bindService(Intent intent, ServiceConnection serviceConnection, int i) {
+        return applicationContext.bindService(intent, serviceConnection, i);
+    }
 
     /**
      * 7. Once you have set the service connect method you're in position to start actually monitoring for a
@@ -83,8 +78,8 @@ public class BeaconMonitorManager extends ReactContextBaseJavaModule implements 
      * Then you supply the beacon identifiers so
      */
     @ReactMethod
-    public void startBeaconMonitoring(@NonNull final Promise promise) {
-        Log.d(TAG, "startBeaconMonitoring called");
+    public void startRangingBeacons() {
+        Log.d(TAG, "startRangingBeacons called");
 
         requestPermissions();
 
@@ -110,18 +105,19 @@ public class BeaconMonitorManager extends ReactContextBaseJavaModule implements 
         }
     }
 
-    @ReactMethod
-    public void stopBeaconMonitoring(@NonNull final Promise promise) {
-        Log.d(TAG, "stopBeaconMonitoring called");
-        try {
-            beaconManager.stopMonitoringBeaconsInRegion(beaconRegion);
-            beaconManager.stopRangingBeaconsInRegion(beaconRegion);
-        } catch (Exception e) {
-            e.printStackTrace();
+    private void requestPermissions() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            getCurrentActivity().requestPermissions(new String[]{Manifest.permission.ACCESS_COARSE_LOCATION,
+                    Manifest.permission.ACCESS_FINE_LOCATION}, 1234);
         }
-        beaconManager.removeAllRangeNotifiers();
-        beaconManager.removeAllMonitorNotifiers();
-        beaconManager.unbind(this);
+    }
+
+    private void configureBeaconManager() {
+        //1. Fetch the beacon manager singleton for the app.
+        beaconManager = BeaconManager.getInstanceForApplication(applicationContext);
+        //2. Set the beacon manager a beacon Pazza with a set layout.
+        beaconManager.getBeaconParsers().add(new BeaconParser().
+                setBeaconLayout("m:0-3=4c000215,i:4-19,i:20-21,i:22-23,p:24-24"));
     }
 
     @Override
@@ -149,26 +145,17 @@ public class BeaconMonitorManager extends ReactContextBaseJavaModule implements 
             @Override
             public void didRangeBeaconsInRegion(final Collection<Beacon> beacons, final Region region) {
                 if (beacons != null && !beacons.isEmpty()) {
-                    int i = 0;
                     Log.d(TAG, "Beacons found: " + beacons.size());
                     for (Beacon beacon : beacons) {
-                        Log.d(TAG, "Beacon " + i + " found");
-                        i++;
-                        showBeaconInfo(beacon);
+                        Log.d(TAG, "Mac addr: " + beacon.getBluetoothAddress() + " - Distance: " + beacon.getDistance());
                         //FIXME pasar array
-                        //resolvePromise(beacon);
+                        sendEvent("didRangeBeaconsInRegion", createResponse(beacon));
                     }
                 } else {
                     Log.d(TAG, "No beacons found.");
                 }
             }
         });
-    }
-
-    private void showBeaconInfo(final Beacon beacon) {
-        final String message = "Mac addr: " + beacon.getBluetoothAddress() + "Distance: " + beacon.getDistance();
-
-        Toast.makeText(applicationContext, message, Toast.LENGTH_SHORT).show();
     }
 
     /**
@@ -203,29 +190,33 @@ public class BeaconMonitorManager extends ReactContextBaseJavaModule implements 
      * }
      */
 
-    private void resolvePromise(@NonNull final Beacon beacon) {
-        if (promise != null) {
-            WritableMap map = Arguments.createMap();
+    private WritableMap createResponse(@NonNull final Beacon beacon) {
+        WritableMap map = Arguments.createMap();
 
-            map.putString(PROMISE_MAC_ADDRESS, beacon.getBluetoothAddress());
-            map.putDouble(PROMISE_DISTANCE, beacon.getDistance());
+        map.putString(PROMISE_MAC_ADDRESS, beacon.getBluetoothAddress());
+        map.putDouble(PROMISE_DISTANCE, beacon.getDistance());
 
-            promise.resolve(map);
+        return map;
+    }
+
+    private void sendEvent(String eventName, @Nullable WritableMap params) {
+        reactContext
+                .getJSModule(DeviceEventManagerModule.RCTDeviceEventEmitter.class)
+                .emit(eventName, params);
+    }
+
+    @ReactMethod
+    public void stopRangingBeacons() {
+        Log.d(TAG, "stopRangingBeacons called");
+        try {
+            beaconManager.stopMonitoringBeaconsInRegion(beaconRegion);
+            beaconManager.stopRangingBeaconsInRegion(beaconRegion);
+            beaconManager.removeAllRangeNotifiers();
+            beaconManager.removeAllMonitorNotifiers();
+            beaconManager.unbind(this);
+            //sendEvent("stopRangingBeacons", null);
+        } catch (Exception e) {
+            e.printStackTrace();
         }
-    }
-
-    @Override
-    public Context getApplicationContext() {
-        return applicationContext;
-    }
-
-    @Override
-    public void unbindService(ServiceConnection serviceConnection) {
-        applicationContext.unbindService(serviceConnection);
-    }
-
-    @Override
-    public boolean bindService(Intent intent, ServiceConnection serviceConnection, int i) {
-        return applicationContext.bindService(intent, serviceConnection, i);
     }
 }

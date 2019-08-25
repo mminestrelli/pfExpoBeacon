@@ -1,5 +1,5 @@
 import React, {Component} from 'react';
-import {StyleSheet, Text, View, Switch, requireNativeComponent} from 'react-native';
+import {StyleSheet, Text, View, Switch, requireNativeComponent, ToastAndroid, DeviceEventEmitter} from 'react-native';
 
 var BeaconMonitor = require('NativeModules').BeaconMonitor;
 const isOnText = "Switch OFF";
@@ -17,34 +17,46 @@ constructor(props) {
 _onStatusChange = e => {
   if(this.state.isOn){
     console.log("stop");
-    this.stopBeaconMonitoring();  
+    this.stopRangingBeacons();  
     this.setState({ buttonText: isOffText});
     this.setState({ isOn: false});
   }else {
     console.log("start");
-    this.startBeaconMonitoring();
+    this.startRangingBeacons();
     this.setState({ buttonText: isOnText});
     this.setState({ isOn: true});
   }
-  
 }
 
-async startBeaconMonitoring() {
+startRangingBeacons() {
   try {
-    var {macAddress, distance} = await BeaconMonitor.startBeaconMonitoring();
-    console.log("Mac Address: " + macAddress + " - Distance: " + distance);
+    BeaconMonitor.startRangingBeacons();
+    this.suscribeForEvents();
   } catch (e) {
     console.error(e);
   }
 }
 
-async stopBeaconMonitoring() {
+suscribeForEvents() {
+  this.subscription = DeviceEventEmitter.addListener('didRangeBeaconsInRegion', (data) => {
+    //TODO abrir pantalla con los beacons listados. 
+    //Ojo, porque recibir estos eventos deberían refreshear la data de la lista. Ver como resolver el ciclo de vida.
+    ToastAndroid.show("Mac Address: " + data.macAddress + " - Distance: " + data.distance, ToastAndroid.SHORT);
+  })  
+}
+
+
+stopRangingBeacons() {
   try {
-    var {macAddress, distance} = await BeaconMonitor.stopBeaconMonitoring();
-    console.log("Mac Address: " + macAddress + " - Distance: " + distance);
+    BeaconMonitor.stopRangingBeacons();
+    this.unsuscribeForEvents();
   } catch (e) {
     console.error(e);
   }
+}
+
+unsuscribeForEvents() {
+  this.subscription.remove();  
 }
 
 render() {
