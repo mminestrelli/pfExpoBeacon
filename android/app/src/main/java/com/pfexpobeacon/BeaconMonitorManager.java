@@ -15,7 +15,9 @@ import com.facebook.react.bridge.Arguments;
 import com.facebook.react.bridge.ReactApplicationContext;
 import com.facebook.react.bridge.ReactContextBaseJavaModule;
 import com.facebook.react.bridge.ReactMethod;
+import com.facebook.react.bridge.WritableArray;
 import com.facebook.react.bridge.WritableMap;
+import com.facebook.react.bridge.WritableNativeArray;
 import com.facebook.react.modules.core.DeviceEventManagerModule;
 
 import java.util.Collection;
@@ -33,10 +35,23 @@ import static org.altbeacon.beacon.BeaconManager.DEFAULT_FOREGROUND_SCAN_PERIOD;
 
 public class BeaconMonitorManager extends ReactContextBaseJavaModule implements BeaconConsumer {
 
-    public static final String PROMISE_MAC_ADDRESS = "macAddress";
-    public static final String PROMISE_DISTANCE = "distance";
-
     private static final String TAG = "ReactNativeJS - Android";
+
+    public static final String REGION_UNIQUE_ID = "identifier";
+    public static final String REGION_UUID = "uuid";
+
+    public static final String BEACON_UUID = "uuid";
+    public static final String BEACON_MAJOR_ID = "major";
+    public static final String BEACON_MINOR_ID = "minor";
+    public static final String BEACON_MAC_ADDRESS = "macAddress";
+    public static final String BEACON_DISTANCE = "distance";
+    public static final String BEACON_RSSI = "rssi";
+    public static final String BEACON_PROXIMITY = "proximity";
+
+    public static final String BEACON_PROXIMITY_UNKNOWN = "unknown";
+    public static final String BEACON_PROXIMITY_IMMEDIATE = "immediate";
+    public static final String BEACON_PROXIMITY_NEAR = "near";
+    public static final String BEACON_PROXIMITY_FAR = "far";
 
     private BeaconManager beaconManager = null;
     private Region beaconRegion = null;
@@ -136,7 +151,6 @@ public class BeaconMonitorManager extends ReactContextBaseJavaModule implements 
     }
 
     private void addRangeNotifier() {
-
         //Specifies a class that should be called each time the BeaconService gets ranging data,
         // which is nominally once per second when beacons are detected.
         //Permits to register several RangeNotifier objects.
@@ -146,11 +160,7 @@ public class BeaconMonitorManager extends ReactContextBaseJavaModule implements 
             public void didRangeBeaconsInRegion(final Collection<Beacon> beacons, final Region region) {
                 if (beacons != null && !beacons.isEmpty()) {
                     Log.d(TAG, "Beacons found: " + beacons.size());
-                    for (Beacon beacon : beacons) {
-                        Log.d(TAG, "Mac addr: " + beacon.getBluetoothAddress() + " - Distance: " + beacon.getDistance());
-                        //FIXME pasar array
-                        sendEvent("didRangeBeaconsInRegion", createResponse(beacon));
-                    }
+                    sendEvent("didRangeBeaconsInRegion", createResponse(beacons, region));
                 } else {
                     Log.d(TAG, "No beacons found.");
                 }
@@ -158,45 +168,49 @@ public class BeaconMonitorManager extends ReactContextBaseJavaModule implements 
         });
     }
 
-    /**
-     * FIXME array delivered
-     * private WritableMap createRangingResponse(Collection<Beacon> beacons, Region region) {
-     * WritableMap map = new WritableNativeMap();
-     * map.putString("identifier", region.getUniqueId());
-     * map.putString("uuid", region.getId1() != null ? region.getId1().toString() : "");
-     * WritableArray a = new WritableNativeArray();
-     * for (Beacon beacon : beacons) {
-     * WritableMap b = new WritableNativeMap();
-     * b.putString("uuid", beacon.getId1().toString());
-     * if (beacon.getIdentifiers().size() > 2) {
-     * b.putInt("major", beacon.getId2().toInt());
-     * b.putInt("minor", beacon.getId3().toInt());
-     * }
-     * b.putInt("rssi", beacon.getRssi());
-     * if(beacon.getDistance() == Double.POSITIVE_INFINITY
-     * || Double.isNaN(beacon.getDistance())
-     * || beacon.getDistance() == Double.NaN
-     * || beacon.getDistance() == Double.NEGATIVE_INFINITY){
-     * b.putDouble("distance", 999.0);
-     * b.putString("proximity", "far");
-     * }else {
-     * b.putDouble("distance", beacon.getDistance());
-     * b.putString("proximity", getProximity(beacon.getDistance()));
-     * }
-     * a.pushMap(b);
-     * }
-     * map.putArray("beacons", a);
-     * return map;
-     * }
-     */
-
-    private WritableMap createResponse(@NonNull final Beacon beacon) {
+    private WritableMap createResponse(@NonNull final Collection<Beacon> beacons, @NonNull final Region region) {
         WritableMap map = Arguments.createMap();
 
-        map.putString(PROMISE_MAC_ADDRESS, beacon.getBluetoothAddress());
-        map.putDouble(PROMISE_DISTANCE, beacon.getDistance());
+        map.putString(REGION_UNIQUE_ID, region.getUniqueId());
+        map.putString(REGION_UUID, region.getId1() != null ? region.getId1().toString() : "");
+        WritableArray a = new WritableNativeArray();
+        for (Beacon beacon : beacons) {
+            Log.d(TAG, "Mac addr: " + beacon.getBluetoothAddress() + " - Distance: " + beacon.getDistance());
+            WritableMap b = Arguments.createMap();
+            b.putString(BEACON_MAC_ADDRESS, beacon.getBluetoothAddress());
+            b.putString(BEACON_UUID, beacon.getId1().toString());
+            if (beacon.getIdentifiers().size() > 2) {
+                b.putInt(BEACON_MAJOR_ID, beacon.getId2().toInt());
+                b.putInt(BEACON_MINOR_ID, beacon.getId3().toInt());
+            }
+            b.putInt(BEACON_RSSI, beacon.getRssi());
+            if (beacon.getDistance() == Double.POSITIVE_INFINITY
+                    || Double.isNaN(beacon.getDistance())
+                    || beacon.getDistance() == Double.NaN
+                    || beacon.getDistance() == Double.NEGATIVE_INFINITY) {
+                b.putDouble(BEACON_DISTANCE, 999.0);
+                b.putString(BEACON_PROXIMITY, "far");
+            } else {
+                b.putDouble(BEACON_DISTANCE, beacon.getDistance());
+                b.putString(BEACON_PROXIMITY, getProximity(beacon.getDistance()));
+            }
+            a.pushMap(b);
+        }
+        map.putArray("beacons", a);
 
         return map;
+    }
+
+    private String getProximity(double distance) {
+        if (distance == -1.0) {
+            return BEACON_PROXIMITY_UNKNOWN;
+        } else if (distance < 1) {
+            return BEACON_PROXIMITY_IMMEDIATE;
+        } else if (distance < 3) {
+            return BEACON_PROXIMITY_NEAR;
+        } else {
+            return BEACON_PROXIMITY_FAR;
+        }
     }
 
     private void sendEvent(String eventName, @Nullable WritableMap params) {

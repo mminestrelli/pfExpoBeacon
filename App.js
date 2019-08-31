@@ -12,6 +12,7 @@ constructor(props) {
   this._onStatusChange = this._onStatusChange.bind(this);
   this.state = { isOn: false};
   this.state = { buttonText: isOffText};
+  this.state = { isDataAvailable: false};
 }
 
 _onStatusChange = e => {
@@ -40,8 +41,10 @@ startRangingBeacons() {
 suscribeForEvents() {
   this.subscription = DeviceEventEmitter.addListener('didRangeBeaconsInRegion', (data) => {
     //TODO abrir pantalla con los beacons listados. 
-    //Ojo, porque recibir estos eventos deberían refreshear la data de la lista. Ver como resolver el ciclo de vida.
-    ToastAndroid.show("Mac Address: " + data.macAddress + " - Distance: " + data.distance, ToastAndroid.SHORT);
+    //Podes usar este this.state.isDataAvailable y this.state.data para mostrar lista de beacons en el render().
+    this.state = { isDataAvailable: true};
+    this.state = { data: data.beacons};
+    ToastAndroid.show("Beacons: " + data.beacons[0].macAddress, ToastAndroid.SHORT);
   })  
 }
 
@@ -62,11 +65,11 @@ unsuscribeForEvents() {
 render() {
  return (
    <View style={styles.container}>
-     <View style={styles.top} >
-      <Text>Monitor de Beacons esta: </Text>
-      <Text>{this.state.isOn ? "Encendido" : "Apagado"}</Text>
-      <Switch value={this.state.isOn} onValueChange={this._onStatusChange} />
-    </View>
+      <View style={styles.top} >
+        <Text>Monitor de Beacons esta: </Text>
+        <Text>{this.state.isOn ? "Encendido" : "Apagado"}</Text>
+        <Switch value={this.state.isOn} onValueChange={this._onStatusChange} />
+      </View>
   </View>
 );
 }
