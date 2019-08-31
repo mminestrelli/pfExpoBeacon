@@ -67,7 +67,7 @@ public class BeaconMonitorManager extends ReactContextBaseJavaModule implements 
     @Nonnull
     @Override
     public String getName() {
-        return "BeaconMonitor";
+        return "BeaconManager";
     }
 
     @Override

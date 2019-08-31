@@ -1,7 +1,7 @@
 import React, {Component} from 'react';
 import {StyleSheet, Text, View, Switch, requireNativeComponent, ToastAndroid, DeviceEventEmitter} from 'react-native';
 
-var BeaconMonitor = require('NativeModules').BeaconMonitor;
+var BeaconManager = require('NativeModules').BeaconManager;
 const isOnText = "Switch OFF";
 const isOffText = "Switch ON";
 
@@ -31,7 +31,7 @@ _onStatusChange = e => {
 
 startRangingBeacons() {
   try {
-    BeaconMonitor.startRangingBeacons();
+    BeaconManager.startRangingBeacons();
     this.suscribeForEvents();
   } catch (e) {
     console.error(e);
@@ -51,7 +51,7 @@ suscribeForEvents() {
 
 stopRangingBeacons() {
   try {
-    BeaconMonitor.stopRangingBeacons();
+    BeaconManager.stopRangingBeacons();
     this.unsuscribeForEvents();
   } catch (e) {
     console.error(e);
