@@ -160,7 +160,6 @@ public class BeaconMonitorManager extends ReactContextBaseJavaModule implements 
             beaconRegion =
                     new Region("MyBeacons", null, null, null);
 
-            beaconManager.startMonitoringBeaconsInRegion(beaconRegion);
             beaconManager.startRangingBeaconsInRegion(beaconRegion);
 
         } catch (Exception e) {
@@ -310,7 +309,6 @@ public class BeaconMonitorManager extends ReactContextBaseJavaModule implements 
             beaconManager.stopMonitoringBeaconsInRegion(beaconRegion);
             beaconManager.stopRangingBeaconsInRegion(beaconRegion);
             beaconManager.removeAllRangeNotifiers();
-            beaconManager.removeAllMonitorNotifiers();
             beaconManager.unbind(this);
             //sendEvent("EVENT_BEACONS_RANGE_STOPPED", null);
         } catch (Exception e) {
