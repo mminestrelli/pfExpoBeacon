@@ -39,7 +39,7 @@ startRangingBeacons() {
 }
 
 suscribeForEvents() {
-  this.subscription = DeviceEventEmitter.addListener('didRangeBeaconsInRegion', (data) => {
+  this.subscription = DeviceEventEmitter.addListener(BeaconManager.EVENT_BEACONS_RANGED, (data) => {
     //TODO abrir pantalla con los beacons listados. 
     //Podes usar este this.state.isDataAvailable y this.state.data para mostrar lista de beacons en el render().
     /* Vas a recibir esto:

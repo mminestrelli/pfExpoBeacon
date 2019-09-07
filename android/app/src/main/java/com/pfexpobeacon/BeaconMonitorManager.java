@@ -1,15 +1,20 @@
 package com.pfexpobeacon;
 
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.Map;
+
+import javax.annotation.Nonnull;
+
 import android.Manifest;
 import android.content.Context;
 import android.content.Intent;
 import android.content.ServiceConnection;
+import android.os.Build;
+import android.util.Log;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
-
-import android.os.Build;
-import android.util.Log;
 
 import com.facebook.react.bridge.Arguments;
 import com.facebook.react.bridge.ReactApplicationContext;
@@ -19,10 +24,6 @@ import com.facebook.react.bridge.WritableArray;
 import com.facebook.react.bridge.WritableMap;
 import com.facebook.react.bridge.WritableNativeArray;
 import com.facebook.react.modules.core.DeviceEventManagerModule;
-
-import java.util.Collection;
-
-import javax.annotation.Nonnull;
 
 import org.altbeacon.beacon.Beacon;
 import org.altbeacon.beacon.BeaconConsumer;
@@ -35,62 +36,109 @@ import static org.altbeacon.beacon.BeaconManager.DEFAULT_FOREGROUND_SCAN_PERIOD;
 
 public class BeaconMonitorManager extends ReactContextBaseJavaModule implements BeaconConsumer {
 
-    private static final String TAG = "ReactNativeJS - Android";
+    private static final String TAG = "ExpoBeacons - Android";
+    private static final String I_BEACON_LAYOUT = "m:0-3=4c000215,i:4-19,i:20-21,i:22-23,p:24-24";
 
-    public static final String REGION_UNIQUE_ID = "identifier";
-    public static final String REGION_UUID = "uuid";
+    private static final String REGION_UNIQUE_ID = "regionId";
+    private static final String REGION_UUID = "regionUuid";
 
-    public static final String BEACON_UUID = "uuid";
-    public static final String BEACON_MAJOR_ID = "major";
-    public static final String BEACON_MINOR_ID = "minor";
-    public static final String BEACON_MAC_ADDRESS = "macAddress";
-    public static final String BEACON_DISTANCE = "distance";
-    public static final String BEACON_RSSI = "rssi";
-    public static final String BEACON_PROXIMITY = "proximity";
+    private static final String BEACON_UUID = "uuid";
+    private static final String BEACON_MAJOR_ID = "major";
+    private static final String BEACON_MINOR_ID = "minor";
+    private static final String BEACON_MAC_ADDRESS = "macAddress";
+    private static final String BEACON_DISTANCE = "distance";
+    private static final String BEACON_RSSI = "rssi";
+    private static final String BEACON_PROXIMITY = "proximity";
 
-    public static final String BEACON_PROXIMITY_UNKNOWN = "unknown";
-    public static final String BEACON_PROXIMITY_IMMEDIATE = "immediate";
-    public static final String BEACON_PROXIMITY_NEAR = "near";
-    public static final String BEACON_PROXIMITY_FAR = "far";
+    private static final String BEACON_PROXIMITY_UNKNOWN = "unknown";
+    private static final String BEACON_PROXIMITY_IMMEDIATE = "immediate";
+    private static final String BEACON_PROXIMITY_NEAR = "near";
+    private static final String BEACON_PROXIMITY_FAR = "far";
+
+    private static final String EVENT_BEACONS_RANGED = "EVENT_BEACONS_RANGED";
+    private static final String EVENT_BEACONS_RANGE_STOPPED = "EVENT_BEACONS_RANGE_STOPPED";
 
     private BeaconManager beaconManager = null;
     private Region beaconRegion = null;
     private ReactApplicationContext reactContext;
     private Context applicationContext;
 
-    public BeaconMonitorManager(@Nonnull final ReactApplicationContext reactContext) {
+    BeaconMonitorManager(@Nonnull final ReactApplicationContext reactContext) {
         super(reactContext);
         this.reactContext = reactContext;
         this.applicationContext = this.reactContext.getApplicationContext();
     }
 
+    /**
+     * Overrides ReactContextBaseJavaModule's getName method.
+     * @return Module's name to be imported in React Native.
+     */
     @Nonnull
     @Override
     public String getName() {
         return "BeaconManager";
     }
 
+    /**
+     * Exposes Module's constants to be used in React Native.
+     * @return a map with the constants.
+     */
+    @Override
+    public Map<String, Object> getConstants() {
+        final Map<String, Object> constants = new HashMap<>();
+        constants.put(REGION_UNIQUE_ID, REGION_UNIQUE_ID);
+        constants.put(REGION_UUID, REGION_UUID);
+        constants.put(BEACON_UUID, BEACON_UUID);
+        constants.put(BEACON_MAJOR_ID, BEACON_MAJOR_ID);
+        constants.put(BEACON_MINOR_ID, BEACON_MINOR_ID);
+        constants.put(BEACON_MAC_ADDRESS, BEACON_MAC_ADDRESS);
+        constants.put(BEACON_DISTANCE, BEACON_DISTANCE);
+        constants.put(BEACON_RSSI, BEACON_RSSI);
+        constants.put(BEACON_PROXIMITY, BEACON_PROXIMITY);
+        constants.put(BEACON_PROXIMITY_UNKNOWN, BEACON_PROXIMITY_UNKNOWN);
+        constants.put(BEACON_PROXIMITY_IMMEDIATE, BEACON_PROXIMITY_IMMEDIATE);
+        constants.put(BEACON_PROXIMITY_NEAR, BEACON_PROXIMITY_NEAR);
+        constants.put(EVENT_BEACONS_RANGED, EVENT_BEACONS_RANGED);
+        constants.put(EVENT_BEACONS_RANGE_STOPPED, EVENT_BEACONS_RANGE_STOPPED);
+        return constants;
+    }
+
+    /**
+     * Overrides BeaconConsumer's method.
+     * Called by the BeaconManager to get the context of your Service or Activity.
+     *
+     * @return the context of your Service or Activity.
+     */
     @Override
     public Context getApplicationContext() {
         return applicationContext;
     }
 
+    /**
+     * Called by the BeaconManager to unbind your BeaconConsumer to the BeaconService.
+     * @param serviceConnection to unbind your BeaconConsumer.
+     */
     @Override
     public void unbindService(ServiceConnection serviceConnection) {
         applicationContext.unbindService(serviceConnection);
     }
 
+    /**
+     * Called by the BeaconManager to bind your BeaconConsumer to the BeaconService.
+     * @return true if service was bound, false otherwise.
+     */
     @Override
     public boolean bindService(Intent intent, ServiceConnection serviceConnection, int i) {
         return applicationContext.bindService(intent, serviceConnection, i);
     }
 
     /**
-     * 7. Once you have set the service connect method you're in position to start actually monitoring for a
+     * Method exposed as a ReactMethod to be used in any React Native app which imports
+     * "BeaconManager" Module.
+     *
+     * When the service connect method is set, use this function to start actually ranging a
      * beacon represented by region.
-     * To do this you construct a region objectm and give it an Id to distinguish one region from another if you decide
-     * to monitor for more than one region.
-     * Then you supply the beacon identifiers so
+     * Region is constructed here with an Id, so this method only allows ranging only one region.
      */
     @ReactMethod
     public void startRangingBeacons() {
@@ -100,8 +148,8 @@ public class BeaconMonitorManager extends ReactContextBaseJavaModule implements 
 
         configureBeaconManager();
 
-        //3. Bind the manager to a class tha implements the Android Beacon library beacon consumer interface.
-        //In order to do that we can implement our MainActivity to implement the beacon consumer interface.
+        // Binds BeaconManager to BeaconConsumer interface implemented in this class,
+        // to use overridden methods.
         beaconManager.bind(this);
 
         beaconManager.setBackgroundMode(false);
@@ -120,47 +168,55 @@ public class BeaconMonitorManager extends ReactContextBaseJavaModule implements 
         }
     }
 
+    /**
+     * Requests ACCESS_COARSE_LOCATION and ACCESS_COARSE_LOCATION for version codes greater than
+     * 23.
+     */
     private void requestPermissions() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            getCurrentActivity().requestPermissions(new String[]{Manifest.permission.ACCESS_COARSE_LOCATION,
-                    Manifest.permission.ACCESS_FINE_LOCATION}, 1234);
+            getCurrentActivity().requestPermissions(new String[]{
+                    Manifest.permission.ACCESS_COARSE_LOCATION,
+                    Manifest.permission.ACCESS_COARSE_LOCATION}, 1234);
         }
     }
 
+    /**
+     * Fetches the beacon manager singleton and sets a parser with a layout.
+     * In this case an IBeacon layout is used.
+     */
     private void configureBeaconManager() {
-        //1. Fetch the beacon manager singleton for the app.
+        //Fetches the beacon manager singleton for the app.
         beaconManager = BeaconManager.getInstanceForApplication(applicationContext);
-        //2. Set the beacon manager a beacon Pazza with a set layout.
+        //Sets the beacon manager a beacon parser with a set layout.
         beaconManager.getBeaconParsers().add(new BeaconParser().
-                setBeaconLayout("m:0-3=4c000215,i:4-19,i:20-21,i:22-23,p:24-24"));
+                setBeaconLayout(I_BEACON_LAYOUT));
     }
 
+    /**
+     * Called when the beacon service is running and ready to accept commands through
+     * the BeaconManager. For that purpose, a Range Notifier is set up to react to beacons events.
+     */
     @Override
     public void onBeaconServiceConnect() {
-        //4. When the beacon service starts, this is called, so you can set up notifiers to react to
-        //beacon events.
         Log.d(TAG, "onBeaconServiceConnect called");
-
-        //5. First, we can set up a monitor notifier which allows you to define methods
-        // did enter or exit region. This methods are called when a mobile device enters or exits a beacon region.
-        //addMonitorNotifier();
-
-        //6. Now conversely if rather than monitoring for the device entering or
-        // exiting the beacon region you want to range instead, you separately set up a range notifier.
         addRangeNotifier();
     }
 
+    /**
+     * Specifies a class that should be called each time the BeaconService gets ranging data,
+     * which is nominally once per second when beacons are detected.
+     * Permits to register several RangeNotifier objects.
+     * The notifier is unregistered in stopRangingBeacons method.
+     */
     private void addRangeNotifier() {
-        //Specifies a class that should be called each time the BeaconService gets ranging data,
-        // which is nominally once per second when beacons are detected.
-        //Permits to register several RangeNotifier objects.
-        //The notifier must be unregistered using (@link #removeRangeNotifier)
         beaconManager.addRangeNotifier(new RangeNotifier() {
             @Override
-            public void didRangeBeaconsInRegion(final Collection<Beacon> beacons, final Region region) {
+            public void didRangeBeaconsInRegion(final Collection<Beacon> beacons,
+                                                final Region region) {
                 if (beacons != null && !beacons.isEmpty()) {
                     Log.d(TAG, "Beacons found: " + beacons.size());
-                    sendEvent("didRangeBeaconsInRegion", createResponse(beacons, region));
+                    sendEvent(EVENT_BEACONS_RANGED,
+                            createResponse(beacons, region));
                 } else {
                     Log.d(TAG, "No beacons found.");
                 }
@@ -168,14 +224,25 @@ public class BeaconMonitorManager extends ReactContextBaseJavaModule implements 
         });
     }
 
-    private WritableMap createResponse(@NonNull final Collection<Beacon> beacons, @NonNull final Region region) {
+    /**
+     * Returns a map with the response for ReactNative's apps listening to this Module.
+     * Response is build with region and found beacons data.
+     *
+     * @param beacons to build response.
+     * @param region to build response.
+     * @return a WritableMap with response to be sent to ReactNative's apps listening
+     * to the Module.
+     */
+    private WritableMap createResponse(@NonNull final Collection<Beacon> beacons,
+                                       @NonNull final Region region) {
         WritableMap map = Arguments.createMap();
 
         map.putString(REGION_UNIQUE_ID, region.getUniqueId());
         map.putString(REGION_UUID, region.getId1() != null ? region.getId1().toString() : "");
         WritableArray a = new WritableNativeArray();
         for (Beacon beacon : beacons) {
-            Log.d(TAG, "Mac addr: " + beacon.getBluetoothAddress() + " - Distance: " + beacon.getDistance());
+            Log.d(TAG, "Mac addr: " + beacon.getBluetoothAddress() + " - Distance: "
+                    + beacon.getDistance());
             WritableMap b = Arguments.createMap();
             b.putString(BEACON_MAC_ADDRESS, beacon.getBluetoothAddress());
             b.putString(BEACON_UUID, beacon.getId1().toString());
@@ -186,7 +253,6 @@ public class BeaconMonitorManager extends ReactContextBaseJavaModule implements 
             b.putInt(BEACON_RSSI, beacon.getRssi());
             if (beacon.getDistance() == Double.POSITIVE_INFINITY
                     || Double.isNaN(beacon.getDistance())
-                    || beacon.getDistance() == Double.NaN
                     || beacon.getDistance() == Double.NEGATIVE_INFINITY) {
                 b.putDouble(BEACON_DISTANCE, 999.0);
                 b.putString(BEACON_PROXIMITY, "far");
@@ -201,6 +267,12 @@ public class BeaconMonitorManager extends ReactContextBaseJavaModule implements 
         return map;
     }
 
+    /**
+     * Translates the beacon's distance to mobile device reading the signal into a readable
+     * category called proximity.
+     * @param distance to decide proximity.
+     * @return beacon's proximity to the device as a String.
+     */
     private String getProximity(double distance) {
         if (distance == -1.0) {
             return BEACON_PROXIMITY_UNKNOWN;
@@ -213,12 +285,24 @@ public class BeaconMonitorManager extends ReactContextBaseJavaModule implements 
         }
     }
 
+    /**
+     * Emits an event with a name and params to be listened in ReactNative apps listening to this
+     * Module.
+     *
+     * @param eventName the event name to be send.
+     * @param params the params to be send to ReactNative apps listening.
+     */
     private void sendEvent(String eventName, @Nullable WritableMap params) {
         reactContext
                 .getJSModule(DeviceEventManagerModule.RCTDeviceEventEmitter.class)
                 .emit(eventName, params);
     }
 
+    /**
+     * Tells the BeaconService to stop looking for beacons that match the passed Region object
+     * and providing mDistance information for them. Removes all the Range Notifiers, and unbinds
+     * an Android Activity or Service to the BeaconService.
+     */
     @ReactMethod
     public void stopRangingBeacons() {
         Log.d(TAG, "stopRangingBeacons called");
@@ -228,7 +312,7 @@ public class BeaconMonitorManager extends ReactContextBaseJavaModule implements 
             beaconManager.removeAllRangeNotifiers();
             beaconManager.removeAllMonitorNotifiers();
             beaconManager.unbind(this);
-            //sendEvent("stopRangingBeacons", null);
+            //sendEvent("EVENT_BEACONS_RANGE_STOPPED", null);
         } catch (Exception e) {
             e.printStackTrace();
         }
