@@ -39,7 +39,7 @@ startRangingBeacons() {
 }
 
 suscribeForEvents() {
-  this.subscription = DeviceEventEmitter.addListener(BeaconManager.EVENT_BEACONS_RANGED, (data) => {
+  this.startSubscription = DeviceEventEmitter.addListener(BeaconManager.EVENT_BEACONS_RANGED, (data) => {
     //TODO abrir pantalla con los beacons listados. 
     //Podes usar este this.state.isDataAvailable y this.state.data para mostrar lista de beacons en el render().
     /* Vas a recibir esto:
@@ -80,7 +80,15 @@ stopRangingBeacons() {
 }
 
 unsuscribeForEvents() {
-  this.subscription.remove();  
+  this.stopSubscription = DeviceEventEmitter.addListener(BeaconManager.EVENT_BEACONS_RANGE_STOPPED, () => {
+    ToastAndroid.show("Beacons range stopped", ToastAndroid.SHORT);
+    this.startSubscription.remove();
+  })
+}
+
+componentWillUnmount() {
+  this.startSubscription.remove();
+  this.stopSubscription.remove();
 }
 
 render() {

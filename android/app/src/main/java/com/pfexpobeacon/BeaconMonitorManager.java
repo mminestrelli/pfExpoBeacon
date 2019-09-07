@@ -310,7 +310,7 @@ public class BeaconMonitorManager extends ReactContextBaseJavaModule implements 
             beaconManager.stopRangingBeaconsInRegion(beaconRegion);
             beaconManager.removeAllRangeNotifiers();
             beaconManager.unbind(this);
-            //sendEvent("EVENT_BEACONS_RANGE_STOPPED", null);
+            sendEvent(EVENT_BEACONS_RANGE_STOPPED, null);
         } catch (Exception e) {
             e.printStackTrace();
         }
