@@ -1,5 +1,6 @@
 import React, {Component} from 'react';
 import {StyleSheet, Text, View, Switch, requireNativeComponent, ToastAndroid, DeviceEventEmitter} from 'react-native';
+import StandList from './standList';
 
 var BeaconManager = require('NativeModules').BeaconManager;
 const isOnText = "Switch OFF";
@@ -13,6 +14,18 @@ constructor(props) {
   this.state = { isOn: false};
   this.state = { buttonText: isOffText};
   this.state = { isDataAvailable: false};
+  this.state = { data: [
+            {macAddress: 'Devin'},
+            {macAddress: 'Dan'},
+            {macAddress: 'Dominic'},
+            {macAddress: 'Jackson'},
+            {macAddress: 'James'},
+            {macAddress: 'Joel'},
+            {macAddress: 'John'},
+            {macAddress: 'Jillian'},
+            {macAddress: 'Jimmy'},
+            {macAddress: 'Julie'},
+          ]};
 }
 
 _onStatusChange = e => {
@@ -63,8 +76,10 @@ suscribeForEvents() {
             "macAddress":"0C:F3:EE:04:19:21"
          }
     */
-    this.state = { isDataAvailable: true};
-    this.state = { data: data.beacons};
+    this.setState({
+      isDataAvailable: true,
+      data: data.beacons
+    });
     ToastAndroid.show("Beacons: " + data.beacons[0].macAddress, ToastAndroid.SHORT);
   })  
 }
@@ -98,11 +113,13 @@ render() {
         <Text>Monitor de Beacons esta: </Text>
         <Text>{this.state.isOn ? "Encendido" : "Apagado"}</Text>
         <Switch value={this.state.isOn} onValueChange={this._onStatusChange} />
+        <StandList stands={this.state.data}/>
       </View>
   </View>
 );
 }
 }
+
 const styles = StyleSheet.create({
 container: {
 flex: 1,
