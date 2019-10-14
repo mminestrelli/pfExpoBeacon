@@ -116,6 +116,9 @@ android {
             abiFilters 'armeabi-v7a', 'x86'
         }
     }
+    packagingOptions {
+      pickFirst '**/libjsc.so'
+    }
     splits {
         abi {
             reset()
