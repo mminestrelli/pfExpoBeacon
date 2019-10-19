@@ -1,12 +1,15 @@
 import React, {Component} from 'react';
 import {StyleSheet, Text, View, Switch, requireNativeComponent, ToastAndroid, DeviceEventEmitter} from 'react-native';
 import StandList from './standList';
+import StandInfo from './standInfo';
+import {createAppContainer} from 'react-navigation';
+import {createStackNavigator} from 'react-navigation-stack';
 
 var BeaconManager = require('NativeModules').BeaconManager;
 const isOnText = "Switch OFF";
 const isOffText = "Switch ON";
 
-export default class App extends Component {
+class App extends Component {
 
 constructor(props) {
   super(props);
@@ -113,7 +116,7 @@ render() {
         <Text>Monitor de Beacons esta: </Text>
         <Text>{this.state.isOn ? "Encendido" : "Apagado"}</Text>
         <Switch value={this.state.isOn} onValueChange={this._onStatusChange} />
-        <StandList stands={this.state.data}/>
+        <StandList stands={this.state.data} navigation={this.props.navigation}/>
       </View>
   </View>
 );
@@ -136,3 +139,12 @@ alignItems: "center",
 justifyContent: "center",
 },
 });
+
+const MainNavigator = createStackNavigator({
+  App: {screen: App},
+  StandInfo: {screen: StandInfo},
+});
+
+const AppNavigation = createAppContainer(MainNavigator);
+
+export default AppNavigation;

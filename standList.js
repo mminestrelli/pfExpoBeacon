@@ -1,5 +1,6 @@
 import React, { Component } from 'react';
-import { FlatList, StyleSheet, Text, View } from 'react-native';
+import { FlatList, StyleSheet, Text, View, Button } from 'react-native';
+import StandInfo from './standInfo';
 
 /**
 * @param props properties needed to render StandList:
@@ -8,11 +9,14 @@ import { FlatList, StyleSheet, Text, View } from 'react-native';
 export default class StandList extends React.Component {
 
   render() {
+    const { navigate } = this.props.navigation;
     return (
       <View style={styles.container}>
         <FlatList
           data={this.props.stands}
-          renderItem={({item}) => <Text style={styles.item}>{item.macAddress}</Text>}
+          renderItem={({item}) => <Button title = {item.macAddress} onPress= {() => navigate('StandInfo', { 
+            macAddress : item.macAddress })}/>}
+            keyExtractor={(item, index) => index.toString()}
         />
       </View>
     );
