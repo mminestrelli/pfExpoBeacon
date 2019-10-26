@@ -1,5 +1,5 @@
 import React, { Component } from 'react';
-import { FlatList, StyleSheet, Text, View,Image,ScrollView } from 'react-native';
+import { FlatList, StyleSheet, Text, View,Image,ScrollView,ActivityIndicator } from 'react-native';
 import { ListItem } from 'react-native-elements'
 
 /**
@@ -9,30 +9,7 @@ import { ListItem } from 'react-native-elements'
 export default class StandList extends React.Component {
   constructor(props){
   super(props);
-  this.state ={ isLoading: true};
-  this.state = { isDataAvailable: false};
 }
-  componentDidMount(){
-    this.getStands();
-  }
-  getStands(){
-    console.log('---------ESTO NO SON PATRANAS----------'+'http://private-f63ff-standsv1.apiary-mock.com/stands/'+this.props.stands[0].macAddress);
-    return fetch('http://private-f63ff-standsv1.apiary-mock.com/stands/'+this.props.stands[0].macAddress)
-      .then((response) => response.json())
-      .then((responseJson) => {
-
-        this.setState({
-          isLoading: false,
-          dataSource: responseJson,
-        }, function(){
-
-        });
-
-      })
-      .catch((error) =>{
-        console.error(error);
-      });
-  }
   keyExtractor = (item, index) => index.toString()
 
   renderItem = ({ item }) => (
@@ -48,20 +25,21 @@ export default class StandList extends React.Component {
   )
 
   render () {
+  if(this.props.isLoadingList){
+      return(
+        <View style={{flex: 1, padding: 20}}>
+          <ActivityIndicator/>
+        </View>
+      )
+    }
   return (
     <View style={styles.container}>
     <ScrollView
         style={styles.container}
         contentContainerStyle={styles.contentContainer}>
-    <View style={styles.container}>
-      <FlatList
-        data={this.props.stands}
-        renderItem={({item}) => <Text style={styles.item}>{item.macAddress}</Text>}
-      />
-    </View>
     <FlatList
       keyExtractor={this.keyExtractor}
-      data={this.state.dataSource}
+      data={this.props.stands}
       renderItem={this.renderItem}
     />
     </ScrollView>
