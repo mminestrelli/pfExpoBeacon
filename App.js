@@ -2,12 +2,15 @@ import React, {Component} from 'react';
 import {StyleSheet, Text, View, Switch, requireNativeComponent, ToastAndroid, DeviceEventEmitter} from 'react-native';
 import {Button,Header} from 'react-native-elements';
 import StandList from './standList';
+import StandInfo from './standInfo';
+import {createAppContainer} from 'react-navigation';
+import {createStackNavigator} from 'react-navigation-stack';
 
 var BeaconManager = require('NativeModules').BeaconManager;
 const isOnText = "Switch OFF";
 const isOffText = "Switch ON";
 
-export default class App extends Component {
+class App extends Component {
 
 constructor(props) {
   super(props);
@@ -177,3 +180,12 @@ alignItems: "center",
 justifyContent: "center",
 },
 });
+
+const MainNavigator = createStackNavigator({
+  App: {screen: App},
+  StandInfo: {screen: StandInfo},
+});
+
+const AppNavigation = createAppContainer(MainNavigator);
+
+export default AppNavigation;
