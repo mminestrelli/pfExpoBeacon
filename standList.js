@@ -19,7 +19,7 @@ export default class StandList extends React.Component {
     leftAvatar={{
       source: item.picture && { uri: item.picture }
     }}
-    onPress= {() => navigate('StandInfo', {
+    onPress= {() => this.props.navigation.navigate('StandInfo', {
       macAddress : item.macAddress })}
     bottomDivider
     chevron

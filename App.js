@@ -159,7 +159,7 @@ render() {
           onPress={this.onRangeButtonPress}
           loading={this.state.isLoading}
         />
-        <StandList stands={this.state.dataSource} isLoadingList={this.state.isLoading}/>
+        <StandList stands={this.state.dataSource} navigation={this.props.navigation} isLoadingList={this.state.isLoading}/>
       </View>
   </View>
 );
