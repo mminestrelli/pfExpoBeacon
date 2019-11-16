@@ -184,6 +184,11 @@ const styles = StyleSheet.create({
 const MainNavigator = createStackNavigator({
   App: {screen: App},
   StandInfo: {screen: StandInfo},
+  },
+  {
+    defaultNavigationOptions: {
+      header: null,
+    }
 });
 
 const AppNavigation = createAppContainer(MainNavigator);
