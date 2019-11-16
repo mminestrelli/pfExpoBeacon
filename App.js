@@ -151,7 +151,7 @@ render() {
       <View style={styles.top} >
             <Header
       leftComponent={{ icon: 'menu', color: '#fff' }}
-      centerComponent={{ text: 'MY TITLE', style: { color: '#fff' } }}
+      centerComponent={{ text: 'EXPO ITBA', style: { color: '#fff' } }}
       rightComponent={{ icon: 'home', color: '#fff' }}
       />
         <Button
@@ -167,18 +167,18 @@ render() {
 }
 
 const styles = StyleSheet.create({
-container: {
-flex: 1,
-backgroundColor: '#F5FCFF',
-},
-top: {
-flex: 1,
-},
-bottom: {
-flex: 1,
-alignItems: "center",
-justifyContent: "center",
-},
+  container: {
+    flex: 1,
+    backgroundColor: '#F5FCFF',
+  },
+  top: {
+    flex: 1,
+  },
+  bottom: {
+    flex: 1,
+    alignItems: "center",
+    justifyContent: "center",
+  },
 });
 
 const MainNavigator = createStackNavigator({
