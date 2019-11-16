@@ -18,6 +18,7 @@ export default class StandInfo extends React.Component {
   }
 
   render() {
+    console.log(this.props.navigation.state.params.item.pictures);
     return (
       <View style={styles.container}>
          <View style={styles.top} >
@@ -26,17 +27,17 @@ export default class StandInfo extends React.Component {
       centerComponent={{ text: 'Stand Info', style: { color: '#fff' } }}
       rightComponent={{ icon: 'home', color: '#fff' }}
       />
-           <SliderBox images={this.state.images} />
+           <SliderBox images={this.props.navigation.state.params.item.pictures} />
            <View style={styles.align}>
             <Text>Puntuación: </Text>
             <Rating
               imageSize={20}
               readonly
-              startingValue={3}
+              startingValue={this.props.navigation.state.params.item.ranking}
             />
           </View>
             <Text style={styles.text, styles.title}>Descripción:</Text>
-            <Text style={styles.text}></Text>
+            <Text style={styles.text}>{this.props.navigation.state.params.item.description}</Text>
         </View>
       </View>
     );

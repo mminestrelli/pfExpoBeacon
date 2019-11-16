@@ -15,12 +15,12 @@ export default class StandList extends React.Component {
   renderItem = ({ item }) => (
   <ListItem
     title={item.title}
-    subtitle={item.description}
+    subtitle={item.short_description}
     leftAvatar={{
-      source: item.picture && { uri: item.picture }
+      source: item.cover_url && { uri: item.cover_url }
     }}
     onPress= {() => this.props.navigation.navigate('StandInfo', {
-      macAddress : item.macAddress })}
+      item : item })}
     bottomDivider
     chevron
   />
