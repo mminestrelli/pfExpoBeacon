@@ -78,6 +78,7 @@ project.ext.react = [
 ]
 
 apply from: "../../node_modules/react-native/react.gradle"
+apply from: "../../node_modules/react-native-vector-icons/fonts.gradle"
 
 /**
  * Set this to true to create two separate APKs instead of one:
@@ -116,11 +117,9 @@ android {
             abiFilters 'armeabi-v7a', 'x86'
         }
     }
-
     packagingOptions {
-        pickFirst '**/libjsc.so'
+      pickFirst '**/libjsc.so'
     }
-
     splits {
         abi {
             reset()
@@ -151,6 +150,7 @@ android {
 }
 
 dependencies {
+    implementation project(':react-native-gesture-handler')
     implementation fileTree(dir: "libs", include: ["*.jar"])
     implementation 'androidx.appcompat:appcompat:1.0.0'
     implementation "com.facebook.react:react-native:+"  // From node_modules
