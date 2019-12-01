@@ -8,7 +8,7 @@ import { createStackNavigator } from 'react-navigation-stack';
 import StandList from './standList';
 import StandInfo from './standInfo';
 
-const { BeaconManager } = require('NativeModules');
+const BeaconManager = require('NativeModules').BeaconManager;
 
 
 class App extends Component {
