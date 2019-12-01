@@ -3,11 +3,15 @@ import {
   StyleSheet, View, ToastAndroid, DeviceEventEmitter
 } from 'react-native';
 import { Button, Header } from 'react-native-elements';
+import { createAppContainer } from 'react-navigation';
+import { createStackNavigator } from 'react-navigation-stack';
 import StandList from './standList';
+import StandInfo from './standInfo';
 
 const { BeaconManager } = require('NativeModules');
 
-export default class App extends Component {
+
+class App extends Component {
   constructor(props) {
     super(props);
     this.state = { isLoading: true };
@@ -32,14 +36,7 @@ export default class App extends Component {
     this.stopSubscription.remove();
   }
 
-  // Rendering and Screen UI events handrlers
-  onRangeButtonPress = () => {
-    this.startRangingBeacons();
-    this.setState({ isLoading: true });
-  }
-
   // Services TODO: Modularize
-
   getAllStands() {
     return fetch('http://private-f63ff-standsv1.apiary-mock.com/stands')
       .then((response) => response.json())
@@ -72,14 +69,18 @@ export default class App extends Component {
       });
   }
 
-  // Beacons handling
+  // Beacons
+  onRangeButtonPress = () => {
+    this.startRangingBeacons();
+    this.setState({ isLoading: true });
+  }
 
   suscribeForEvents() {
     this.startSubscription = DeviceEventEmitter
       .addListener(BeaconManager.EVENT_BEACONS_RANGED, (data) => {
         // TODO abrir pantalla con los beacons listados.
-        // Podes usar este this.state.data para mostrar lista
-        // de beacons en el render().
+        // Podes usar este this.state.isDataAvailable y
+        // this.state.data para mostrar lista de beacons en el render().
         /* Vas a recibir esto:
     "beacons":[
          {
@@ -103,7 +104,6 @@ export default class App extends Component {
     */
         if (data.beacons) {
           this.stopRangingBeacons();
-          console.log(data);
           ToastAndroid.show(`Beacons: ${data.beacons[0].macAddress}`, ToastAndroid.SHORT);
           this.setState({
             data: data.beacons
@@ -118,7 +118,7 @@ export default class App extends Component {
       BeaconManager.startRangingBeacons();
       this.suscribeForEvents();
     } catch (e) {
-      console.error(e);
+      console.log('Should include logger');
     }
   }
 
@@ -139,7 +139,8 @@ export default class App extends Component {
         this.startSubscription.remove();
       });
   }
-  // Rendering
+
+  // Rendering and Screen UI events handlers
 
   render() {
     return (
@@ -147,7 +148,7 @@ export default class App extends Component {
         <View style={styles.top}>
           <Header
             leftComponent={{ icon: 'menu', color: '#fff' }}
-            centerComponent={{ text: 'MY TITLE', style: { color: '#fff' } }}
+            centerComponent={{ text: 'EXPO ITBA', style: { color: '#fff' } }}
             rightComponent={{ icon: 'home', color: '#fff' }}
           />
           <Button
@@ -155,7 +156,11 @@ export default class App extends Component {
             onPress={this.onRangeButtonPress}
             loading={this.state.isLoading}
           />
-          <StandList stands={this.state.dataSource} isLoadingList={this.state.isLoading} />
+          <StandList
+            stands={this.state.dataSource}
+            navigation={this.props.navigation}
+            isLoadingList={this.state.isLoading}
+          />
         </View>
       </View>
     );
@@ -176,3 +181,17 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
 });
+
+const MainNavigator = createStackNavigator({
+  App: { screen: App },
+  StandInfo: { screen: StandInfo },
+},
+{
+  defaultNavigationOptions: {
+    header: null,
+  }
+});
+
+const AppNavigation = createAppContainer(MainNavigator);
+
+export default AppNavigation;

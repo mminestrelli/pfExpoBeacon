@@ -15,10 +15,11 @@ export default class StandList extends React.Component {
   renderItem = ({ item }) => (
     <ListItem
       title={item.title}
-      subtitle={item.description}
+      subtitle={item.short_description}
       leftAvatar={{
-        source: item.picture && { uri: item.picture }
+        source: item.cover_url && { uri: item.cover_url }
       }}
+      onPress={() => this.props.navigation.navigate('StandInfo', { item })}
       bottomDivider
       chevron
     />
@@ -66,17 +67,6 @@ const styles = StyleSheet.create({
   },
   beaconDetailContainer: {
     marginTop: 15,
-    ...Platform.select({
-      ios: {
-        shadowColor: 'black',
-        shadowOffset: { width: 0, height: -3 },
-        shadowOpacity: 0.1,
-        shadowRadius: 3,
-      },
-      android: {
-        elevation: 20,
-      },
-    }),
     alignItems: 'center',
     backgroundColor: '#fbfbfb',
   },
